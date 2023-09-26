@@ -9,6 +9,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using FontStashSharp;
+using System.Xml.Linq;
 
 namespace MonogameTemplate1_0
 {
@@ -126,7 +127,7 @@ namespace MonogameTemplate1_0
         /// </summary>
         public void AddTexture(string name)
         {
-            textures.addTexture(name, Game.Content.Load<Texture2D>(name));
+            textures.AddTexture(name);
         }
 
         /// <summary>
@@ -376,13 +377,10 @@ namespace MonogameTemplate1_0
         public class Textures
         {
             Dictionary<string, Texture2D> textureDictionary = new Dictionary<string, Texture2D>();
-            public Textures()
-            {
-            }
 
-            public void addTexture(string name, Texture2D texture)
+            public void AddTexture(string name)
             {
-                textureDictionary[name] = texture;
+                textureDictionary[name] = Inst.Game.Content.Load<Texture2D>(name);
             }
 
             public Texture2D get(string name)
@@ -393,7 +391,8 @@ namespace MonogameTemplate1_0
                 }
                 else
                 {
-                    throw new Exception($"Texture2D File: {name} does not exist");
+                    AddTexture(name);
+                    return get(name);
                 }
             }
         }
@@ -554,6 +553,33 @@ namespace MonogameTemplate1_0
         public static float VectorPointAngle(Vector2 PointFrom, Vector2 PointTo)
         {
             return (MathHelper.ToDegrees(MathF.Atan2(PointTo.Y - PointFrom.Y, PointTo.X - PointFrom.X)) + 360) % 360;
+        }
+
+        public static Vector2 EjectCircle(Rectangle rectangle, float circleRad, Vector2 circleLocation)
+        {
+            Vector2 circleTransform = circleLocation - rectangle.Center.ToVector2();
+
+            float depthX = Math.Abs(circleTransform.X) - rectangle.Width / 2f;
+            float depthY = Math.Abs(circleTransform.Y) - rectangle.Height / 2f;
+
+            if (depthX > depthY)
+            {//move in Y direction
+                float moveY = depthY + circleRad;
+
+                if (circleTransform.Y < 0)
+                    moveY *= -1;
+
+                return circleLocation + new Vector2(0, moveY);
+            }
+            else
+            {//move in X direction
+                float moveX = depthX + circleRad;
+
+                if (circleTransform.X < 0)
+                    moveX *= -1;
+
+                return circleLocation + new Vector2(moveX, 0);
+            }
         }
 
         public static Vector2 SetVectorAngle(float rotation, Vector2 vector)
